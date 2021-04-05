@@ -10,11 +10,19 @@
 # error "please don't include this file directly"
 #endif
 
-typedef struct {
-	volatile unsigned int lock;
-} arch_spinlock_t;
+#define TICKET_SHIFT	16
 
-#define __ARCH_SPIN_LOCK_UNLOCKED	{ 0 }
+typedef struct {
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	u16 next;
+	u16 owner;
+#else
+	u16 owner;
+	u16 next;
+#endif
+} __aligned(4) arch_spinlock_t;
+
+#define __ARCH_SPIN_LOCK_UNLOCKED	{ 0 , 0 }
 
 typedef struct {
 	volatile unsigned int lock;
