@@ -9,4 +9,10 @@
 #define RISCV_RELEASE_BARRIER
 #endif
 
+#define __acquire_fence() \
+	__asm__ __volatile__(RISCV_ACQUIRE_BARRIER "" ::: "memory")
+
+#define __release_fence() \
+	__asm__ __volatile__(RISCV_RELEASE_BARRIER "" ::: "memory")
+
 #endif	/* _ASM_RISCV_FENCE_H */

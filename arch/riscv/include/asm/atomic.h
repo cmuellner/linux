@@ -19,11 +19,8 @@
 #include <asm/cmpxchg.h>
 #include <asm/barrier.h>
 
-#define __atomic_acquire_fence()					\
-	__asm__ __volatile__(RISCV_ACQUIRE_BARRIER "" ::: "memory")
-
-#define __atomic_release_fence()					\
-	__asm__ __volatile__(RISCV_RELEASE_BARRIER "" ::: "memory");
+#define __atomic_acquire_fence() __acquire_fence()
+#define __atomic_release_fence() __release_fence()
 
 static __always_inline int atomic_read(const atomic_t *v)
 {
