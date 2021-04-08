@@ -242,58 +242,58 @@ static __always_inline s64 atomic64_fetch_add_unless(atomic64_t *v, s64 a, s64 u
  * atomic_{cmp,}xchg is required to have exactly the same ordering semantics as
  * {cmp,}xchg and the operations that return, so they need a full barrier.
  */
-#define ATOMIC_OP(c_t, prefix, size)					\
+#define ATOMIC_OP(c_t, prefix)						\
 static __always_inline							\
 c_t atomic##prefix##_xchg_relaxed(atomic##prefix##_t *v, c_t n)		\
 {									\
-	return __xchg_relaxed(&(v->counter), n, size);			\
+	return xchg_relaxed(&(v->counter), n);				\
 }									\
 static __always_inline							\
 c_t atomic##prefix##_xchg_acquire(atomic##prefix##_t *v, c_t n)		\
 {									\
-	return __xchg_acquire(&(v->counter), n, size);			\
+	return xchg_acquire(&(v->counter), n);				\
 }									\
 static __always_inline							\
 c_t atomic##prefix##_xchg_release(atomic##prefix##_t *v, c_t n)		\
 {									\
-	return __xchg_release(&(v->counter), n, size);			\
+	return xchg_release(&(v->counter), n);				\
 }									\
 static __always_inline							\
 c_t atomic##prefix##_xchg(atomic##prefix##_t *v, c_t n)			\
 {									\
-	return __xchg(&(v->counter), n, size);				\
+	return xchg(&(v->counter), n);					\
 }									\
 static __always_inline							\
 c_t atomic##prefix##_cmpxchg_relaxed(atomic##prefix##_t *v,		\
 				     c_t o, c_t n)			\
 {									\
-	return __cmpxchg_relaxed(&(v->counter), o, n, size);		\
+	return cmpxchg_relaxed(&(v->counter), o, n);			\
 }									\
 static __always_inline							\
 c_t atomic##prefix##_cmpxchg_acquire(atomic##prefix##_t *v,		\
 				     c_t o, c_t n)			\
 {									\
-	return __cmpxchg_acquire(&(v->counter), o, n, size);		\
+	return cmpxchg_acquire(&(v->counter), o, n);			\
 }									\
 static __always_inline							\
 c_t atomic##prefix##_cmpxchg_release(atomic##prefix##_t *v,		\
 				     c_t o, c_t n)			\
 {									\
-	return __cmpxchg_release(&(v->counter), o, n, size);		\
+	return cmpxchg_release(&(v->counter), o, n);			\
 }									\
 static __always_inline							\
 c_t atomic##prefix##_cmpxchg(atomic##prefix##_t *v, c_t o, c_t n)	\
 {									\
-	return __cmpxchg(&(v->counter), o, n, size);			\
+	return cmpxchg(&(v->counter), o, n);				\
 }
 
 #ifdef CONFIG_GENERIC_ATOMIC64
 #define ATOMIC_OPS()							\
-	ATOMIC_OP(int,   , 4)
+	ATOMIC_OP(int,   )
 #else
 #define ATOMIC_OPS()							\
-	ATOMIC_OP(int,   , 4)						\
-	ATOMIC_OP(s64, 64, 8)
+	ATOMIC_OP(int,   )						\
+	ATOMIC_OP(s64, 64)
 #endif
 
 ATOMIC_OPS()
