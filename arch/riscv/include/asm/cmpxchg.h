@@ -11,12 +11,59 @@
 #include <asm/barrier.h>
 #include <asm/fence.h>
 
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define BITOFF_32(off, size)   ((sizeof(u32) - size - off) * BITS_PER_BYTE)
+#else
+#define BITOFF_32(off, size)   (off * BITS_PER_BYTE)
+#endif
+
+/*
+ * Mask and set given bits at a given address atomically.
+ * The (masked) old value will be returned.
+ */
+static inline u32 atomic_mask_and_set_32(u32 *p, u32 mask, u32 val)
+{
+	u32 ret, tmp;
+	__asm__ __volatile__ (
+		"0:	lr.w %0, %2\n"
+		"	and  %1, %0, %3\n"
+		"	or   %1, %1, %4\n"
+		"	sc.w %1, %1, %2\n"
+		"	bnez %1, 0b\n"
+		: "=&r"(ret), "=&r"(tmp), "+A"(*p)
+		: "r"(~mask), "r"(val)
+		: "memory");
+	ret &= mask;
+	return ret;
+}
+
+static inline unsigned long __xchg_small(void* ptr, unsigned long val,
+		size_t size)
+{
+	unsigned long ret;
+
+	uintptr_t off = ((uintptr_t)ptr & 0x3);
+	u32* addr = (u32*) ((uintptr_t)ptr & ~0x3);
+
+	u32 mask = ((0x1 << size * BITS_PER_BYTE) - 1) << BITOFF_32(off, size);
+	val = val << BITOFF_32(off, size);
+	val = atomic_mask_and_set_32(addr, mask, val);
+	ret = val >> BITOFF_32(off, size);
+	return ret;
+}
+
 #define __xchg_relaxed(ptr, new, size)					\
 ({									\
 	__typeof__(ptr) __ptr = (ptr);					\
 	__typeof__(new) __new = (new);					\
 	__typeof__(*(ptr)) __ret;					\
 	switch (size) {							\
+	case 1:								\
+		fallthrough;						\
+	case 2:								\
+		__ret = (__typeof__(*(ptr))) __xchg_small((ptr),	\
+				(unsigned long)(new), size);		\
+		break;							\
 	case 4:								\
 		__asm__ __volatile__ (					\
 			"	amoswap.w %0, %2, %1\n"			\
